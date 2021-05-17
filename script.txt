@@ -1,0 +1,8 @@
+info
+sort
+remove_by_id 5678
+max_by_health
+remove_all_by_health 102
+print_ascending
+remove_lower
+clear
