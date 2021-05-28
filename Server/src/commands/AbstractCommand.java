@@ -1,5 +1,7 @@
 package commands;
 
+import interaction.User;
+
 public abstract class AbstractCommand implements Commands{
     String name;
     String description;

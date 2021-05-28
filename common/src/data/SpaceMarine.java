@@ -1,8 +1,11 @@
 package data;
 
+import interaction.User;
+
 import java.util.Date;
 
 public class SpaceMarine implements Comparable<SpaceMarine> {
+
     private long id;
     private String name;
     private Coordinates coordinates;
@@ -12,18 +15,21 @@ public class SpaceMarine implements Comparable<SpaceMarine> {
     private Weapon weaponType;
     private MeleeWeapon meleeWeapon;
     private Chapter chapter;
-    public SpaceMarine(){}
-    public SpaceMarine(Long id, String name, Coordinates coordinates,java.util.Date creationDate,Long health,AstartesCategory category,
-                       Weapon weapon,MeleeWeapon meleeWeapon, Chapter chapter){
+    private User owner;
+
+    public SpaceMarine(Long id, String name, Coordinates coordinates, java.util.Date creationDate, long health,
+                       AstartesCategory category, Weapon weaponType, MeleeWeapon meleeWeapon, Chapter chapter,
+                       User owner) {
         this.id = id;
         this.name = name;
         this.coordinates = coordinates;
-        this.creationDate  = creationDate;
+        this.creationDate = creationDate;
         this.health = health;
         this.category = category;
-        this.weaponType = weapon;
+        this.weaponType = weaponType;
         this.meleeWeapon = meleeWeapon;
         this.chapter = chapter;
+        this.owner = owner;
     }
     /**
      * @return id of the marine
@@ -132,5 +138,8 @@ public class SpaceMarine implements Comparable<SpaceMarine> {
             return name.equals(((SpaceMarine) obj).getName());
         }
         return false;
+    }
+    public User getOwner() {
+        return owner;
     }
 }

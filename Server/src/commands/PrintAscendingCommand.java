@@ -2,6 +2,7 @@ package commands;
 
 import exception.MarineNotFoundException;
 import exception.WrongAmountOfElementException;
+import interaction.User;
 import utility.CollectionManager;
 import utility.Outputer;
 import utility.ResponseOutputer;
@@ -13,7 +14,7 @@ public class PrintAscendingCommand extends AbstractCommand {
         this.collectionManager = collectionManager;
     }
     @Override
-    public boolean executed(String argument, Object commandObjectArgument) {
+    public boolean executed(String argument, Object commandObjectArgument, User user) {
         try {
             if (!argument.isEmpty() || commandObjectArgument != null) throw new WrongAmountOfElementException();
             if (collectionManager.collectionSize() == 0) throw new MarineNotFoundException();

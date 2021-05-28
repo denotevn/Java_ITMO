@@ -1,2 +1,4 @@
-package exception;public class PermissionDeniedException {
+package exception;
+
+public class PermissionDeniedException extends Exception {
 }

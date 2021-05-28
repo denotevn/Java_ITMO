@@ -1,2 +1,4 @@
-package exception;public class UserIsNotFoundException {
+package exception;
+
+public class UserIsNotFoundException extends Exception {
 }

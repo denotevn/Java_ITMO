@@ -1,2 +1,4 @@
-package exception;public class MustBeNotEmptyException {
+package exception;
+
+public class MustBeNotEmptyException  extends Exception{
 }

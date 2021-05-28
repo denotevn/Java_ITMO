@@ -1,39 +1,49 @@
 package commands;
 
 import data.*;
-import exception.CollectionIsEmptyException;
-import exception.MarineNotFoundException;
-import exception.WrongAmountOfElementException;
+import exception.*;
 import interaction.MarineRaw;
-import utility.CollectionManager;
-import utility.InputChek;
-import utility.MarineAsk;
-import utility.ResponseOutputer;
+import interaction.Response;
+import interaction.User;
+import utility.*;
 
+import javax.xml.crypto.Data;
 import java.io.IOException;
 
 public class UpdateIdCommand extends AbstractCommand {
     private CollectionManager collectionManager;
     private InputChek inPutCheck;
-    public UpdateIdCommand(CollectionManager collectionManager, InputChek inPutCheck){
+    private DatabaseCollectionManager databaseCollectionManager;
+    public UpdateIdCommand(CollectionManager collectionManager,
+                           InputChek inPutCheck,DatabaseCollectionManager databaseCollectionManager){
         super("update: ", "ID {element}","update the value " +
                 "of the collection element whose id is equal to the given");
         this.collectionManager = collectionManager;
         this.inPutCheck = inPutCheck;
+        this.databaseCollectionManager = databaseCollectionManager;
     }
-
+    /**
+     * Executes the command.
+     *
+     * @return Command exit status.
+     */
     @Override
-    public boolean executed(String argument, Object ObjectArgument) {
+    public boolean executed(String argument, Object ObjectArgument, User user) {
         try{
             if (argument.isEmpty() || ObjectArgument == null) throw new WrongAmountOfElementException();
             if (collectionManager.collectionSize() == 0) throw new CollectionIsEmptyException();
+
             if (inPutCheck.longInValidCheck(argument,(long)0,Long.MAX_VALUE)){
                 Long id = Long.parseLong(argument);
                 if (id<0) throw new NumberFormatException();
                 SpaceMarine marine = collectionManager.getById(id);
-                if (marine == null) throw new MarineNotFoundException();
 
+                if (marine == null) throw new MarineNotFoundException();
+                if (!marine.getOwner().equals(user)) throw new PermissionDeniedException();
+                if (!databaseCollectionManager.checkMarineUserId(marine.getId(), user)) throw new ManualDatabaseEditException();
                 MarineRaw marineRaw = (MarineRaw) ObjectArgument;
+
+                databaseCollectionManager.updateMarineById(id, marineRaw);
 
                 String name = marineRaw.getName() == null ? marine.getName() : marineRaw.getName();
                 Coordinates coordinates = marineRaw.getCoordinates() == null ? marine.getCoordinates() : marineRaw.getCoordinates();
@@ -45,7 +55,6 @@ public class UpdateIdCommand extends AbstractCommand {
                 Chapter chapter = marineRaw.getChapter() == null ? marine.getChapter() : marineRaw.getChapter();
 
                 collectionManager.removeFromCollection(marine);
-
                 collectionManager.add(new SpaceMarine(
                         id,
                         name,
@@ -55,7 +64,8 @@ public class UpdateIdCommand extends AbstractCommand {
                         category,
                         weaponType,
                         meleeWeapon,
-                        chapter
+                        chapter,
+                        user
                 ));
 
                 ResponseOutputer.appendln("Success update marine ! ");
@@ -64,11 +74,18 @@ public class UpdateIdCommand extends AbstractCommand {
         } catch (WrongAmountOfElementException e) {
             ResponseOutputer.appendln("Using: "+ getName() + getUsage() + " ");
         } catch (CollectionIsEmptyException e) {
-            e.printStackTrace();
+            ResponseOutputer.appendln("Collection is null.");
         }catch (MarineNotFoundException e) {
-            e.printStackTrace();
+            ResponseOutputer.appendln("Marine is not found.");
         }catch(NumberFormatException exception){
             ResponseOutputer.appenderror("The index id needs to be greater than 0 !");
+        } catch (PermissionDeniedException e) {
+            ResponseOutputer.appenderror ("Insufficient rights to execute this command!");
+            ResponseOutputer.appendln ("Objects owned by other users are read-only.");
+        } catch (ManualDatabaseEditException e) {
+            e.printStackTrace();
+        } catch (DatabaseHandlingException e) {
+            ResponseOutputer.appenderror ("An error occurred while accessing the database!");
         }
         return false;
     }

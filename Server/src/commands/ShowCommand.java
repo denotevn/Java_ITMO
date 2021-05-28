@@ -1,9 +1,12 @@
 package commands;
 
 import exception.WrongAmountOfElementException;
+import interaction.User;
 import utility.CollectionManager;
 import utility.ResponseOutputer;
-
+/**
+ * Command 'show'. Shows information about all elements of the collection.
+ */
 public class ShowCommand extends AbstractCommand{
     private CollectionManager collectionManager ;
 
@@ -19,7 +22,7 @@ public class ShowCommand extends AbstractCommand{
      * @return Command exit status.
      */
     @Override
-    public boolean executed(String argument, Object commandObjectArgument) {
+    public boolean executed(String argument, Object commandObjectArgument, User user) {
         try{
             if (!argument.isEmpty() || commandObjectArgument !=null ) throw new WrongAmountOfElementException();
             ResponseOutputer.appendln(collectionManager.showCollection());

@@ -1,19 +1,35 @@
 package utility;
 
 import data.SpaceMarine;
+import exception.DatabaseHandlingException;
 import exception.MarineIsEmptyCollection;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
+import java.util.logging.Logger;
 public class CollectionManager {
-    private Stack<SpaceMarine> listMarine = new Stack<>();
-    private FileManager fileManager = new FileManager();
-    public void loadCollection(String fileName){
-        listMarine.addAll(FileManager.readCollection("fileInput.json"));
+    private Stack<SpaceMarine> listMarine;
+    private DatabaseCollectionManager databaseCollectionManager;
+    public CollectionManager(DatabaseCollectionManager databaseCollectionManager) {
+        this.databaseCollectionManager = databaseCollectionManager;
+        loadCollection();
+    }
+    public void loadCollection(){
+        try{
+            listMarine = databaseCollectionManager.getCollection();
+            Outputer.println("The collection is loaded.");
+            Logger.getLogger("The collection is loaded.");
+        } catch (DatabaseHandlingException e) {
+            listMarine = new Stack<>();
+            Outputer.printerror("The collection is not loaded! ");
+            Logger.getLogger("The collection is not loaded!");
+        }
+    }
+    public Stack<SpaceMarine> getListMarine(){
+        return listMarine;
     }
     /**Add all objects to the list
      * @param marineStack */
+
     public Stack<SpaceMarine> addToCollection(Stack<SpaceMarine> marineStack)
     {
         marineStack.addAll(listMarine);
@@ -24,11 +40,10 @@ public class CollectionManager {
     public int collectionSize() {
         return listMarine.size();
     }
-    public Long generateNextId() {
-        if (listMarine.isEmpty()) return 1L;
-        return listMarine.lastElement().getId() + 1;
-    }
-
+//    public Long generateNextId() {
+//        if (listMarine.isEmpty()) return 1L;
+//        return listMarine.lastElement().getId() + 1;
+//    }
     /**Get by Id
      * @param id
      */
@@ -109,27 +124,35 @@ public class CollectionManager {
     public void removeFromCollection(SpaceMarine marine){
         listMarine.remove(marine);
     }
-    public void removeAllMarine(List<SpaceMarine> arrMarine){
-        arrMarine.removeAll(arrMarine);
+    public void removeAllMarine(SpaceMarine arrMarine){
+        listMarine.remove(arrMarine);
     }
     /**
      * @param marineToFind
      * @return outputs items that are less than Marin To Find
      */
-    public List<SpaceMarine> getByValue(SpaceMarine marineToFind) {
-        return listMarine.stream().filter(marine -> marine.compareTo(marineToFind) > 1).collect(Collectors.toList());
+    public SpaceMarine getByValue(SpaceMarine marineToFind) {
+        return listMarine.stream().filter(marine -> marine.equals(marineToFind)).findFirst().orElse(null);
     }
 
-
+    /**
+     * Remove marines greater than the selected one.
+     *
+     * @param marineToCompare A marine to compare with.
+     * @return Greater marines list.
+     */
+    public Stack<SpaceMarine> getLower(SpaceMarine marineToCompare){
+        return listMarine.stream().filter(marine -> marine.compareTo(marineToCompare) < 0 ).collect(
+                Stack::new,
+                Stack::add,
+                Stack::addAll
+        );
+    }
 
     /** sort the collection in natural order */
     public void sort(){
         Collections.sort(listMarine);
     }
     /**Method to save the file object*/
-    public void saveCollection(){
-        FileManager.writeCollection(listMarine);
-    }
-
 
 }

@@ -1,2 +1,4 @@
-package exception;public class UserAlreadyExists {
+package exception;
+
+public class UserAlreadyExists extends Exception {
 }

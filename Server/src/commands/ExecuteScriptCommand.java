@@ -1,6 +1,7 @@
 package commands;
 
 import exception.WrongAmountOfElementException;
+import interaction.User;
 import utility.ResponseOutputer;
 
 
@@ -14,7 +15,7 @@ public class ExecuteScriptCommand  extends AbstractCommand{
     }
 
     @Override
-    public boolean executed(String argument, Object objectArgument) {
+    public boolean executed(String argument, Object objectArgument, User user) {
         try{
             if (argument.isEmpty() || objectArgument !=null) throw new WrongAmountOfElementException();
             return true;

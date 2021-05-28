@@ -8,11 +8,14 @@ import exception.ScriptRecursionException;
 import interaction.MarineRaw;
 import interaction.Request;
 import interaction.ResponseCode;
+import interaction.User;
 
 import java.io.*;
 import java.util.NoSuchElementException;
 import java.util.Stack;
-
+/**
+ * Receives user requests.
+ */
 public class UserHandler {
     private BufferedReader userReader;
     private final Stack<BufferedReader> readerStack = new Stack<>();
@@ -29,7 +32,7 @@ public class UserHandler {
      * @param serverResponeCode Last server's response code.
      * @return New request to server.
      */
-    public Request handler(ResponseCode serverResponeCode)
+    public Request handler(ResponseCode serverResponeCode, User user)
     {
         String userInput = null;
         String [] userCommand = new String[2];
@@ -78,10 +81,10 @@ public class UserHandler {
                 switch (processingCode){
                     case OBJECT:
                         MarineRaw marineRaw = generateMarineAdd();
-                        return new Request(userCommand[0],userCommand[1],marineRaw);
+                        return new Request(userCommand[0],userCommand[1],marineRaw,user);
                     case UPDATE_OBJECT:
                         MarineRaw updateMarineRaw = generateMarineUpdate();
-                        return new Request(userCommand[0],userCommand[1],updateMarineRaw);
+                        return new Request(userCommand[0],userCommand[1],updateMarineRaw,user);
                     case SCRIPT:
                         File scriptFile = new File(userCommand[1]);
                         if (!scriptFile.exists()) throw new FileNotFoundException();
@@ -109,12 +112,13 @@ public class UserHandler {
                     userReader = readerStack.pop();
                 }
                 filesScriptStack.clear();
-                return new Request();
             } catch (IOException ioException) {
-                ioException.printStackTrace();
+                Outputer.printerror("IOException occurred");
+                System.exit(0);
             }
+            return new Request(user);
         }
-        return new Request(userCommand[0],userCommand[1]);
+        return new Request(userCommand[0],userCommand[1],user);
     }
 
     private boolean isScriptMode() {
@@ -229,5 +233,6 @@ public class UserHandler {
         }
         return marine;
     }
+
 
 }

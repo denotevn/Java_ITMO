@@ -1,2 +1,4 @@
-package exception;public class ManualDatabaseEditException {
+package exception;
+
+public class ManualDatabaseEditException extends Exception{
 }

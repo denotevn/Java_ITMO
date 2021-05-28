@@ -1,6 +1,7 @@
 package commands;
 
 import exception.WrongAmountOfElementException;
+import interaction.User;
 import utility.CollectionManager;
 import utility.Outputer;
 import utility.ResponseOutputer;
@@ -15,7 +16,7 @@ public class InfoCommand  extends AbstractCommand{
         this.collectionManager = collectionManager1;
     }
     @Override
-    public boolean executed(String argument, Object objectArgument) {
+    public boolean executed(String argument, Object objectArgument, User user) {
         try {
             ResponseOutputer.appendln("show info command: ");
             if (!argument.isEmpty() || objectArgument != null) throw new WrongAmountOfElementException();
