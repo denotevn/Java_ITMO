@@ -30,7 +30,7 @@ public class RemoveLowerCommand extends AbstractCommand{
             if (collectionManager.collectionSize() == 0) throw new MarineIsEmptyCollection();
             MarineRaw marineRaw = (MarineRaw)ObjectArgument;
             SpaceMarine marineToFind = new SpaceMarine(
-                    0L,
+                    0,
                     marineRaw.getName(),
                     marineRaw.getCoordinates(),
                     java.util.Date.from(Instant.now()),

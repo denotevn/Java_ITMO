@@ -22,7 +22,7 @@ public class Server {
         this.commandManager = commandManager;
         this.semaphore =new Semaphore(maxClients);
     }
-
+/** dung de su li du lieu */
     public void run(){
         try {
             while(!isStopped){
@@ -31,14 +31,14 @@ public class Server {
                     if (isStopped())throw new ConnectionErrorException();
                     forkJoinPool.invoke(new ConnectionHandler(this,port,commandManager));
                 } catch (ConnectionErrorException e) {
-                    Outputer.printerror("An error occurred while connecting to the client!");
-                    AppServer.LOGGER.severe("An error occurred while connecting to the client!");
+                    break;
                 }
             }
             forkJoinPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-            Outputer.println("server.Server shutdown!");
+            Outputer.println("Server shutdown!");
+            AppServer.LOGGER.severe("Server shutdown !");
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Outputer.printerror ("An error occurred while shutting down with already connected clients!");
         }
     }
     /**
@@ -52,11 +52,7 @@ public class Server {
         } catch (InterruptedException e) {
             Outputer.printerror ("An error occurred while getting permission for a new connection!");
             AppServer.LOGGER.severe("An error occurred while getting permission for a new connection!");
-            /**
-             * can sua lai doan nay ne
-             * them cai Logger nhung phai biet phan biet giuwa client va server
-             * */
-            Logger.getLogger("An error occurred while getting permission for a new connection!");
+            AppServer.LOGGER.severe("An error occurred while getting permission for a new connection!");
         }
     }
     /**
@@ -69,11 +65,11 @@ public class Server {
     }
 
     public synchronized  void stop(){
-        Logger.getLogger("done task in server. ");
+        AppServer.LOGGER.severe("done task in server. ");
         isStopped = true;
         forkJoinPool.shutdown();
         Outputer.println("Finishing work with already connected clients.");
-        Logger.getLogger("Server shutdown !");
+        AppServer.LOGGER.severe("Server shutdown !");
     }
     /**
      * Checked stops of server.

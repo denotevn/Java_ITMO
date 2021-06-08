@@ -69,8 +69,8 @@ public class DatabaseCollectionManager {
     private final String SELECT_ALL_CHAPTER = "SELECT * FROM " + DatabaseHandler.CHAPTER_TABLE;
     private final String SELECT_CHAPTER_BY_ID = SELECT_ALL_CHAPTER +
             " WHERE " + DatabaseHandler.CHAPTER_TABLE_ID_COLUMN + " = ?";
-    private final String SELECT_CHAPTER_BY_HEALTH = SELECT_ALL_CHAPTER + " WHERE "+
-            DatabaseHandler.CHAPTER_TABLE_HEALTH_COLUMN + " = ?";
+//    private final String SELECT_CHAPTER_BY_HEALTH = SELECT_ALL_CHAPTER + " WHERE "+
+//            DatabaseHandler.CHAPTER_TABLE_HEALTH_COLUMN + " = ?";
     private final String INSERT_CHAPTER = "INSERT INTO " +
             DatabaseHandler.CHAPTER_TABLE + " (" +
             DatabaseHandler.CHAPTER_TABLE_NAME_COLUMN + ", " +
@@ -97,29 +97,34 @@ public class DatabaseCollectionManager {
      * @throws SQLException When there's exception inside.
      */
     private SpaceMarine createMarine(ResultSet resultSet) throws SQLException {
-        //resultSet.get() - tra lai du lieu cua chi muc cot duoc chi dinh cau hang hien tai
-        long id = resultSet.getLong(DatabaseHandler.MARINE_TABLE_ID_COLUMN);
-        String name = resultSet.getString(DatabaseHandler.MARINE_TABLE_NAME_COLUMN);
-        java.util.Date creationDate = resultSet.getTimestamp(DatabaseHandler.MARINE_TABLE_CREATION_DATE_COLUMN);
-        long health = resultSet.getLong(DatabaseHandler.MARINE_TABLE_HEALTH_COLUMN);
-        AstartesCategory category = AstartesCategory.valueOf(resultSet.getString(DatabaseHandler.MARINE_TABLE_CATEGORY_COLUMN));
-        Weapon weaponType = Weapon.valueOf(resultSet.getString(DatabaseHandler.MARINE_TABLE_WEAPON_TYPE_COLUMN));
-        MeleeWeapon meleeWeapon = MeleeWeapon.valueOf(resultSet.getString(DatabaseHandler.MARINE_TABLE_MELEE_WEAPON_COLUMN));
-        Coordinates coordinates = getCoordinatesByMarineId(id);
-        Chapter chapter = getChapterById(resultSet.getLong(DatabaseHandler.MARINE_TABLE_CHAPTER_ID_COLUMN));
-        User owner = databaseUserManager.getUserById(resultSet.getLong(DatabaseHandler.MARINE_TABLE_USER_ID_COLUMN));
-        return new SpaceMarine(
-                id,
-                name,
-                coordinates,
-                creationDate,
-                health,
-                category,
-                weaponType,
-                meleeWeapon,
-                chapter,
-                owner
-        );
+        try {
+
+            //resultSet.get() - tra lai du lieu cua chi muc cot duoc chi dinh cau hang hien tai
+            int id = resultSet.getInt(DatabaseHandler.MARINE_TABLE_ID_COLUMN);
+            String name = resultSet.getString(DatabaseHandler.MARINE_TABLE_NAME_COLUMN);
+            java.util.Date creationDate = resultSet.getTimestamp(DatabaseHandler.MARINE_TABLE_CREATION_DATE_COLUMN);
+            long health = resultSet.getLong(DatabaseHandler.MARINE_TABLE_HEALTH_COLUMN);
+            AstartesCategory category = AstartesCategory.valueOf(resultSet.getString(DatabaseHandler.MARINE_TABLE_CATEGORY_COLUMN));
+            Weapon weaponType = Weapon.valueOf(resultSet.getString(DatabaseHandler.MARINE_TABLE_WEAPON_TYPE_COLUMN));
+            MeleeWeapon meleeWeapon = MeleeWeapon.valueOf(resultSet.getString(DatabaseHandler.MARINE_TABLE_MELEE_WEAPON_COLUMN));
+            Coordinates coordinates = getCoordinatesByMarineId(id);
+            Chapter chapter = getChapterById(resultSet.getLong(DatabaseHandler.MARINE_TABLE_CHAPTER_ID_COLUMN));
+            User owner = databaseUserManager.getUserById(resultSet.getLong(DatabaseHandler.MARINE_TABLE_USER_ID_COLUMN));
+            return new SpaceMarine(
+                    id,
+                    name,
+                    coordinates,
+                    creationDate,
+                    health,
+                    category,
+                    weaponType,
+                    meleeWeapon,
+                    chapter,
+                    owner
+            );
+        } catch (Exception e) {
+            System.out.println(e);
+        } return null;
     }
     /**
      * @return List of Marines.
@@ -131,13 +136,14 @@ public class DatabaseCollectionManager {
         try{
             preparedSelectAllStatement = databaseHandler.getPreparedStatement(SELECT_ALL_MARINES,false);
             ResultSet resultSet = preparedSelectAllStatement.executeQuery();
-            while(resultSet.next()){
+            while(resultSet.next()) {
                 marineList.add(createMarine(resultSet));
                 //ham createMarine(resultSet da duoc tao o tren (logic la nhu vay))
             }
-        } catch (SQLException exception) {
-            throw new DatabaseHandlingException();
-        }finally{
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        finally {
             databaseHandler.closePreparedStatement(preparedSelectAllStatement);
         }
         return marineList;
@@ -152,7 +158,7 @@ public class DatabaseCollectionManager {
         PreparedStatement preparedSelectMarineByIdStatement = null;
         try{
             preparedSelectMarineByIdStatement = databaseHandler.getPreparedStatement(SELECT_MARINE_BY_ID,false);
-            preparedSelectMarineByIdStatement.setLong(1,marineId);
+            preparedSelectMarineByIdStatement.setLong(1, marineId);
             ResultSet resultSet = preparedSelectMarineByIdStatement.executeQuery();
             AppServer.LOGGER.info("Success SELECT_MARINE_BY_ID");
             if (resultSet.next()){
@@ -177,21 +183,22 @@ public class DatabaseCollectionManager {
     private Coordinates getCoordinatesByMarineId(long marineId) throws SQLException {
         Coordinates coordinates;
         PreparedStatement preparedSelectCoordinateByMarineIdStatement = null;
-        try{
+        try {
             preparedSelectCoordinateByMarineIdStatement =
                     databaseHandler.getPreparedStatement(SELECT_COORDINATES_BY_MARINE_ID,false);
-            preparedSelectCoordinateByMarineIdStatement.setLong(1,marineId);
+            preparedSelectCoordinateByMarineIdStatement.setLong(1, marineId);
             ResultSet resultSet = preparedSelectCoordinateByMarineIdStatement.executeQuery();
-            AppServer.LOGGER.info("Success SELECT_COORDINATE_BY_MARINE_IF");
+            AppServer.LOGGER.info("Success SELECT_COORDINATE_BY_MARINE_ID");
             if (resultSet.next()){
-                coordinates = new Coordinates(resultSet.getInt(DatabaseHandler.COORDINATES_TABLE_X_COLUMN),
-                        resultSet.getDouble(DatabaseHandler.COORDINATES_TABLE_Y_COLUMN));
+                coordinates = new Coordinates(
+                        (int)resultSet.getLong(DatabaseHandler.COORDINATES_TABLE_X_COLUMN),
+                        resultSet.getInt(DatabaseHandler.COORDINATES_TABLE_Y_COLUMN));
             }else
                 throw new SQLException();
         } catch (SQLException exception) {
-            AppServer.LOGGER.severe("Произошла ошибка при выполнении запроса SELECT_COORDINATES_BY_MARINE_ID!");
+            AppServer.LOGGER.severe("An error occurred while executing the SELECT_COORDINATES_BY_MARINE_ID query!");
             throw new SQLException(exception);
-        }finally {
+        } finally {
             databaseHandler.closePreparedStatement(preparedSelectCoordinateByMarineIdStatement);
         }
         return coordinates;
@@ -232,13 +239,13 @@ public class DatabaseCollectionManager {
      * @return Marine.
      * @throws DatabaseHandlingException When there's exception inside.
      */
-
-    public SpaceMarine insertMarine(MarineRaw marineRaw,User user) throws DatabaseHandlingException, SQLException {
+/**problem in here*/
+    public SpaceMarine insertMarine(MarineRaw marineRaw,User user) throws DatabaseHandlingException {
         SpaceMarine marine;
         PreparedStatement preparedInsertMarineStatement = null;
         PreparedStatement preparedInsertCoordinatesStatement = null;
         PreparedStatement preparedInsertChapterStatement = null;
-        try{
+        try {
             databaseHandler.setCommitMode();
             databaseHandler.setSavepoint();
             java.util.Date creationDate = java.util.Date.from(Instant.now());
@@ -249,18 +256,20 @@ public class DatabaseCollectionManager {
 
             preparedInsertChapterStatement.setString(1,marineRaw.getChapter().getName());
             preparedInsertChapterStatement.setString(2,marineRaw.getChapter().getParentLegion());
+
             if (preparedInsertChapterStatement.executeUpdate() == 0) throw new SQLException();
             ResultSet generatedChapterKeys = preparedInsertChapterStatement.getGeneratedKeys();
             long chapterId;
             if (generatedChapterKeys.next()){
-                chapterId = generatedChapterKeys.getLong(1);
+                chapterId = generatedChapterKeys.getInt(1);
             }else
                 throw new SQLException();
             AppServer.LOGGER.severe("success INSERT_CHAPTER.");
 
-
+ //           Date date = new Date();
+ //           Timestamp.valueOf(String.valueOf(creationDate))
             preparedInsertMarineStatement.setString(1, marineRaw.getName());
-            preparedInsertMarineStatement.setTimestamp(2, Timestamp.valueOf(String.valueOf(creationDate)));
+            preparedInsertMarineStatement.setTimestamp(2, new Timestamp(creationDate.getTime()));
             preparedInsertMarineStatement.setLong(3, marineRaw.getHealth());
             preparedInsertMarineStatement.setString(4, marineRaw.getCategory().toString());
             preparedInsertMarineStatement.setString(5, marineRaw.getWeaponType().toString());
@@ -271,13 +280,16 @@ public class DatabaseCollectionManager {
             ResultSet generatedMarineKeys = preparedInsertMarineStatement.getGeneratedKeys();
             long spaceMarineId;
             if (generatedMarineKeys.next()) {
-                spaceMarineId = generatedMarineKeys.getLong(1);
+                spaceMarineId = generatedMarineKeys.getInt(1);
             } else throw new SQLException();
             AppServer.LOGGER.info("Success INSERT_MARINE.");
 
             preparedInsertCoordinatesStatement.setLong(1, spaceMarineId);
             preparedInsertCoordinatesStatement.setInt(2, marineRaw.getCoordinates().getX());
-            preparedInsertCoordinatesStatement.setDouble(3, marineRaw.getCoordinates().getY());
+            preparedInsertCoordinatesStatement.setInt(3, marineRaw.getCoordinates().getY());
+            preparedInsertCoordinatesStatement.execute();
+            AppServer.LOGGER.severe("Success INSERT_COORDINATES.");
+            ResponseOutputer.appendln("Success INSERT_COORDINATES.");
 
             marine = new SpaceMarine(
                     spaceMarineId,
@@ -293,11 +305,13 @@ public class DatabaseCollectionManager {
             );
             databaseHandler.commit();
             return marine;
-        } catch (SQLException exception) {
+        }
+        catch (SQLException exception) {
             AppServer.LOGGER.severe("An error occurred while executing a group of requests to add a new object!");
             databaseHandler.rollback();
             throw new DatabaseHandlingException();
-        }finally {
+        }
+        finally {
             databaseHandler.closePreparedStatement(preparedInsertMarineStatement);
             databaseHandler.closePreparedStatement(preparedInsertCoordinatesStatement);
             databaseHandler.closePreparedStatement(preparedInsertChapterStatement);
@@ -334,15 +348,19 @@ public class DatabaseCollectionManager {
                 preparedUpdateMarineNameByIdStatement.setString(1, marineRaw.getName());
                 preparedUpdateMarineNameByIdStatement.setLong(2, marineId);
                 if (preparedUpdateMarineNameByIdStatement.executeUpdate() == 0) throw new SQLException();
-                Logger.getLogger("Выполнен запрос UPDATE_MARINE_NAME_BY_ID.");
+                Logger.getLogger("Success UPDATE_MARINE_NAME_BY_ID.");
             }
+
             if (marineRaw.getCoordinates() != null){
                 preparedUpdateCoordinatesByMarineIdStatement.setInt(1,marineRaw.getCoordinates().getX());
-                preparedUpdateCoordinatesByMarineIdStatement.setDouble(1,marineRaw.getCoordinates().getY());
+                preparedUpdateCoordinatesByMarineIdStatement.setDouble(2,marineRaw.getCoordinates().getY());
                 preparedUpdateCoordinatesByMarineIdStatement.setLong(3, marineId);
+                System.out.println(preparedUpdateCoordinatesByMarineIdStatement);
+                System.out.println(preparedUpdateCoordinatesByMarineIdStatement.executeUpdate());
                 if (preparedUpdateCoordinatesByMarineIdStatement.executeUpdate() == 0) throw new SQLException();
                 /** can viet them nhat ky  */
             }
+
             if (marineRaw.getHealth() != -1){
                 preparedUpdateMarineHealthByIdStatement.setLong(1,marineRaw.getHealth());
                 preparedUpdateMarineHealthByIdStatement.setLong(2, marineId);
@@ -398,9 +416,13 @@ public class DatabaseCollectionManager {
         PreparedStatement preparedDeleteChapterByIdStatement = null;
         try{
             preparedDeleteChapterByIdStatement = databaseHandler.getPreparedStatement(DELETE_MARINE_BY_ID,false);
-            preparedDeleteChapterByIdStatement.setLong(1,getChapterIdByIdMarineId(marineId));
+            preparedDeleteChapterByIdStatement.setLong(1, marineId);
+
+            preparedDeleteChapterByIdStatement.execute();
+
             if (preparedDeleteChapterByIdStatement.executeUpdate() == 0) Outputer.println(3);
-            Logger.getLogger("Success DELETE_CHAPTER_BY_ID.");
+
+            AppServer.LOGGER.severe("Success DELETE_CHAPTER_BY_ID.");
         } catch (SQLException exception) {
             AppServer.LOGGER.severe("An error occurred while executing the DELETE_CHAPTER_BY_ID request!");
             throw new DatabaseHandlingException();
@@ -460,7 +482,8 @@ public class DatabaseCollectionManager {
             preparedSelectMarineByIdAndUserIdStatement.setLong(2, databaseUserManager.getUserIdByUsername(user));
             ResultSet resultSet = preparedSelectMarineByIdAndUserIdStatement.executeQuery();
             AppServer.LOGGER.info("Success SELECT_MARINE_BY_ID_AND_USER_ID.");
-            return resultSet.next();
+            System.out.println(resultSet.next());
+            return !resultSet.next();
         } catch (SQLException exception) {
             AppServer.LOGGER.severe("An error occurred while executing the SELECT_MARINE_BY_ID_AND_USER_ID! query!");
             throw new DatabaseHandlingException();

@@ -17,7 +17,7 @@ public class SpaceMarine implements Comparable<SpaceMarine> {
     private Chapter chapter;
     private User owner;
 
-    public SpaceMarine(Long id, String name, Coordinates coordinates, java.util.Date creationDate, long health,
+    public SpaceMarine(long id, String name, Coordinates coordinates, java.util.Date creationDate, long health,
                        AstartesCategory category, Weapon weaponType, MeleeWeapon meleeWeapon, Chapter chapter,
                        User owner) {
         this.id = id;
@@ -127,10 +127,16 @@ public class SpaceMarine implements Comparable<SpaceMarine> {
                 ", category=" + category +
                 ", weaponType=" + weaponType +
                 ", meleeWeapon=" + meleeWeapon +
-                ", chapter=" + chapter +
+                ", chapter=" + chapter+
+                 ",User = "+ owner               +
                 '}';
     }
 
+    @Override
+    public int hashCode() {
+        return name.hashCode() + coordinates.hashCode() + (int) health + category.hashCode() + weaponType.hashCode() +
+                meleeWeapon.hashCode() + chapter.hashCode();
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -142,4 +148,10 @@ public class SpaceMarine implements Comparable<SpaceMarine> {
     public User getOwner() {
         return owner;
     }
+
+    public void setHealth(long health) {
+        this.health = health;
+    }
+
+
 }

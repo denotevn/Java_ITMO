@@ -5,6 +5,7 @@ import exception.*;
 import interaction.MarineRaw;
 import interaction.Response;
 import interaction.User;
+import server.AppServer;
 import utility.*;
 
 import javax.xml.crypto.Data;
@@ -16,7 +17,7 @@ public class UpdateIdCommand extends AbstractCommand {
     private DatabaseCollectionManager databaseCollectionManager;
     public UpdateIdCommand(CollectionManager collectionManager,
                            InputChek inPutCheck,DatabaseCollectionManager databaseCollectionManager){
-        super("update: ", "ID {element}","update the value " +
+        super("update id: ", "ID {element}","update the value " +
                 "of the collection element whose id is equal to the given");
         this.collectionManager = collectionManager;
         this.inPutCheck = inPutCheck;
@@ -34,15 +35,16 @@ public class UpdateIdCommand extends AbstractCommand {
             if (collectionManager.collectionSize() == 0) throw new CollectionIsEmptyException();
 
             if (inPutCheck.longInValidCheck(argument,(long)0,Long.MAX_VALUE)){
-                Long id = Long.parseLong(argument);
+                int id = Integer.parseInt(argument);
                 if (id<0) throw new NumberFormatException();
-                SpaceMarine marine = collectionManager.getById(id);
+                SpaceMarine marine = collectionManager.getMarineById(id);
 
                 if (marine == null) throw new MarineNotFoundException();
                 if (!marine.getOwner().equals(user)) throw new PermissionDeniedException();
+                /**loi o dong duoi nay*/
                 if (!databaseCollectionManager.checkMarineUserId(marine.getId(), user)) throw new ManualDatabaseEditException();
                 MarineRaw marineRaw = (MarineRaw) ObjectArgument;
-
+                /**loi o duoi nay*/
                 databaseCollectionManager.updateMarineById(id, marineRaw);
 
                 String name = marineRaw.getName() == null ? marine.getName() : marineRaw.getName();

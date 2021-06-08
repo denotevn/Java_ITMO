@@ -43,7 +43,7 @@ public abstract class AbstractCommand implements Commands{
 
     @Override
     public int hashCode() {
-        return name.hashCode() + usage.hashCode() + description.hashCode();
+        return name.hashCode() + description.hashCode();
     }
 
     @Override

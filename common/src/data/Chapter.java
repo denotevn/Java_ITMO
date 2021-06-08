@@ -20,9 +20,6 @@ public class Chapter implements Serializable {
         this.name = name;
     }
 
-    public void setParentLegion(String parentLegion) {
-        this.parentLegion = parentLegion;
-    }
 
     public String getName() {
         return name;
@@ -38,5 +35,15 @@ public class Chapter implements Serializable {
                 "name='" + name + '\'' +
                 ", parentLegion='" + parentLegion + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj instanceof Chapter) {
+            Chapter chapterObj = (Chapter) obj;
+            return name.equals(chapterObj.getName()) && (parentLegion == chapterObj.getParentLegion());
+        }
+        return false;
     }
 }

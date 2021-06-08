@@ -26,7 +26,7 @@ public class MaxByHealthCommand extends AbstractCommand {
             return true;
         } catch (WrongAmountOfElementException e) {
             ResponseOutputer.appendln("Error");
-            ResponseOutputer.appendln("Использование: '" + getName() + " " + getUsage() + "'");
+            ResponseOutputer.appendln("Using: '" + getName() + " " + getUsage() + "'");
         } catch (MarineIsEmptyCollection marineIsEmptyCollection) {
             ResponseOutputer.appenderror("Collection is null");
             marineIsEmptyCollection.printStackTrace();

@@ -8,6 +8,8 @@ import exception.WrongAmountOfElementException;
 import interaction.User;
 import utility.*;
 
+import java.util.Stack;
+
 public class RemoveByHealthCommand extends AbstractCommand {
     private CollectionManager collectionManager;
     private InputChek inPutCheck;
@@ -24,15 +26,15 @@ public class RemoveByHealthCommand extends AbstractCommand {
     public boolean executed(String argument, Object commandObjectArgument, User user) {
         try{
             if (argument.isEmpty() || commandObjectArgument != null) throw new WrongAmountOfElementException();
-            if (collectionManager.getListMarine().isEmpty()) throw new CollectionIsEmptyException();
+            if (collectionManager.getCollection().isEmpty()) throw new CollectionIsEmptyException();
 
             Long health = Long.parseLong(argument);
-            SpaceMarine marineToRemove = collectionManager.getByHealth(health);
+            Stack<SpaceMarine> marineToRemove = collectionManager.getByHealth(health);
 
             if (marineToRemove == null) throw new MarineNotFoundException();
             if (inPutCheck.longInValidCheck(argument,(long)0,Long.MAX_VALUE)){
                 databaseCollectionManager.deleteMarineByHealth(health);
-                collectionManager.removeFromCollection(marineToRemove);
+                collectionManager.removeListFromCollection(marineToRemove);
                 ResponseOutputer.appendln("Marine health of "+ health + " has been removed");
                 return true;
             }

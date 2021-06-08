@@ -41,17 +41,27 @@ public class HandlerRequestTask extends RecursiveTask<Response> {
         switch (command){
             case "":
                 break;
-            case "help":
-                if (!commandManager.help(commandStringArgument, commandObjectArgument,user))
+            case "sort":
+                if(commandManager.sort(commandStringArgument,commandObjectArgument,user)){
                     return ResponseCode.ERROR;
+                }
+                break;
+            case "help":
+                if (!commandManager.help(commandStringArgument, commandObjectArgument,user)){
+                    return ResponseCode.ERROR;
+                }
                 break;
             case "info":
-                if (!commandManager.info(commandStringArgument,commandObjectArgument,user))
+                if (!commandManager.info(commandStringArgument,commandObjectArgument,user)){
                     return ResponseCode.ERROR;
+                }
+                break;
             case "show":
                 if (!commandManager.show(commandStringArgument,commandObjectArgument,user))
                     return ResponseCode.ERROR;
+                break;
             case "add":
+                System.out.println("Im here requestTask");
                 if (!commandManager.add(commandStringArgument, commandObjectArgument, user))
                     return ResponseCode.ERROR;
                 break;
@@ -98,12 +108,15 @@ public class HandlerRequestTask extends RecursiveTask<Response> {
             case "max_by_health":
                 if (!commandManager.maxByHealth(commandStringArgument,commandObjectArgument,user))
                     return ResponseCode.ERROR;
+                break;
             case "remove_all_by_health":
                 if (commandManager.removeByHealth(commandStringArgument,commandObjectArgument,user))
                     return ResponseCode.ERROR;
+                break;
             case "print_ascending":
                 if (!commandManager.printAscending(commandStringArgument,commandObjectArgument,user))
                     return ResponseCode.ERROR;
+                break;
             default:
                 ResponseOutputer.appendln("Команда '" + command + "' не найдена. Наберите 'help' для справки.");
                 return ResponseCode.ERROR;

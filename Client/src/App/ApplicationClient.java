@@ -18,15 +18,17 @@ public class ApplicationClient {
     private static final int RECONNECTION_TIMEOUT = 5 * 1000;
     private static final int MAX_RECONNECTION_ATTEMPTS = 5;
 
-    private static String host = "se.ifmo.ru";
+    private static String host = "127.0.0.1";
+    //            "se.ifmo.ru";
     //    = "127.0.0.1";
     private static int port = 6789;
     public static void main(String[] args) throws IOException {
-        Outputer.println("Hello bro !");
+        Outputer.println("Welcome to our app !");
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         AuthHandler authHandler = new AuthHandler(reader);
         UserHandler userHandler = new UserHandler(reader);
+
         Client client = new Client(host, port, RECONNECTION_TIMEOUT, MAX_RECONNECTION_ATTEMPTS, userHandler, authHandler);
         client.run();
         reader.close();

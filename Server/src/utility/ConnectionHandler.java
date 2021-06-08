@@ -1,6 +1,7 @@
 
 package utility;
 
+import App.Client;
 import server.AppServer;
 import server.Server;
 import interaction.Request;
@@ -9,9 +10,7 @@ import interaction.Response;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.SocketException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -24,7 +23,7 @@ public class ConnectionHandler extends RecursiveAction {
     private DatagramChannel channel;
     private CommandManager commandManager;
     private ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
-
+    private final ExecutorService sendCachedThreadPool = Executors.newCachedThreadPool();
 
     public ConnectionHandler(Server server, int port, CommandManager commandManager) {
         this.server = server;
@@ -34,98 +33,93 @@ public class ConnectionHandler extends RecursiveAction {
 
     @Override
     protected void compute() {
-        boolean stop = false;
+        boolean stopFlag = false;
         Con con = new Con();
-        /**
-         * configureBlocking(boolean block) throws IOException
-         * block - true neu kenh nay se duoc dat o che do chan
-         * block - false neu kenh duoc dat o che do khong chan
-         * */
-        try{
-            /**can viet logger o doan nay*/
+        try {
+            AppServer.LOGGER.info("Server starting on port " + port);
+
             channel = DatagramChannel.open();
             channel.socket().bind(new InetSocketAddress(port));
-            channel.configureBlocking(false);
+            channel.configureBlocking(false); //  thiet lap che do khong chan
 
             Selector selector = Selector.open();
-            SelectionKey clikey = channel.register(selector,SelectionKey.OP_READ);
-            /** attach(Object ob) - Dinh kem doi tuong da cho vao khoa nay*/
-            clikey.attach(con);
-            while(channel.isOpen()){
-                try{
-                    if (selector. selectNow() != 0){
+            SelectionKey cliKey = channel.register(selector, SelectionKey.OP_READ);
+            cliKey.attach(con);
+
+            while (channel.isOpen()) {
+                try {
+                    if (selector.selectNow() != 0) {
                         Iterator<SelectionKey> iter = selector.selectedKeys().iterator();
-                        while (iter.hasNext()){
-                            SelectionKey key = iter.next();
-                            iter.remove();
 
-                            if (!key.isValid()) {
-                                continue;
-                            }
+                        while (iter.hasNext()) {
+                            try {
+                                SelectionKey key = iter.next();
+                                iter.remove();
 
-                            if (key.isReadable()) {
-                                forkJoinPool.submit(()->{
-                                    try {
-                                        read(key);
-                                    } catch (IOException exception) {
-                                        exception.printStackTrace();
-                                    } catch (ClassNotFoundException e) {
-                                        e.printStackTrace();
-                                    } catch (ExecutionException e) {
-                                        e.printStackTrace();
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
+                                if (!key.isValid()) {
+                                    continue;
+                                }
+
+                                if (key.isReadable()) {
+                                    read(key);
                                     key.interestOps(SelectionKey.OP_WRITE);
-                                });
-                            }
-                            if (key.isWritable()) {
-                                write(key);
-                                key.interestOps(SelectionKey.OP_READ);
+                                }
+
+                                if (key.isWritable()) {
+                                    write(key);
+                                    key.interestOps(SelectionKey.OP_READ);
+                                }
+
+                            } catch (IOException e) {
+                                System.err.println("glitch, continuing... " + (e.getMessage() != null ? e.getMessage() : ""));
+                            } catch (InterruptedException | ExecutionException e) {
+                                e.printStackTrace();
                             }
                         }
                     }
                 } catch (IOException e) {
                     System.err.println("glitch, continuing... " + (e.getMessage() != null ? e.getMessage() : ""));
                 }
-                selector.close();
             }
-
-        } catch (SocketException e) {
-            e.printStackTrace();
-        } catch (ClosedChannelException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+            selector.close();
+        } catch (ClassNotFoundException exception) {
+            Outputer.printerror("An error occurred while reading the received data!");
+            AppServer.LOGGER.severe("An error occurred while reading the received data!");
+        } catch (InvalidClassException | NotSerializableException exception) {
+            Outputer.printerror("An error occurred while sending data to the client!");
+            AppServer.LOGGER.severe("An error occurred while sending data to the client!");
+        } catch (IOException exception) {
             if (con.request == null) {
                 Outputer.printerror("Unexpected disconnection from the client!");
-                AppServer.LOGGER.severe("Непредвиденный разрыв соединения с клиентом!");
+                AppServer.LOGGER.severe("Unexpected disconnection from the client!");
             } else {
-                Outputer.println("Клиент успешно отключен от сервера!");
-               AppServer.LOGGER.info("Клиент успешно отключен от сервера!");
+                Outputer.println("The client has been successfully disconnected from the server!");
+                AppServer.LOGGER.info("The client has been successfully disconnected from the server!");
             }
-        }finally {
+        } finally {
             try {
-                forkJoinPool.shutdown();
+              //  sendCachedThreadPool.shutdown();
                 channel.close();
-                Outputer.println("Клиент отключен от сервера.");
-                AppServer.LOGGER.info("Клиент отключен от сервера.");
+                Outputer.println("Client disconnected from server");
+                AppServer.LOGGER.info("Client disconnected from server");
             } catch (IOException exception) {
-                Outputer.printerror("Произошла ошибка при попытке завершить соединение с клиентом!");
-                AppServer.LOGGER.severe("Произошла ошибка при попытке завершить соединение с клиентом!");
+                Outputer.printerror("An error occurred while trying to end the connection with the client!");
+                AppServer.LOGGER.severe("An error occurred while trying to end the connection with the client!");
             }
-            if (stop) server.stop();
+            if (stopFlag) server.stop();
             server.releaseConnection();
         }
-
     }
 
+//read(DatagramChannel channel, Con con)
+    /**su dung forkJoinpool de doc yeu cau tu client*/
     private void read(SelectionKey key) throws IOException, ClassNotFoundException, ExecutionException, InterruptedException {
-        DatagramChannel channel = (DatagramChannel) key.channel();
+        DatagramChannel channel = (DatagramChannel)key.channel();
         Con con = (Con)key.attachment();
 
         ByteBuffer buf = ByteBuffer.allocate(2048);
         con.sa = channel.receive(buf);
-        // viet nhat ky ow day
+        AppServer.LOGGER.info("Receiving a request...");
 
         byte[] arr = buf.array();
         ByteArrayInputStream bais = new ByteArrayInputStream(arr);
@@ -135,12 +129,14 @@ public class ConnectionHandler extends RecursiveAction {
         Future<Response> responseFuture = forkJoinPool.submit(new HandlerRequestTask(con.request, commandManager));
         con.response = responseFuture.get();
 
-        //viet nhat ky vao day
+        AppServer.LOGGER.info("Processing request " + con.request.getCommandName() + "...");
         ois.close();
     }
 
+    //write(DatagramChannel channel, Con con, SocketAddress addr)
+    /**tao thread moi de gui ket qua den nguoi dung*/
     private void write(SelectionKey key) {
-        forkJoinPool.submit(()->{
+        Runnable thread = ()->{
             try{
                 DatagramChannel channel = (DatagramChannel) key.channel();
                 Con con = (Con) key.attachment();
@@ -153,13 +149,42 @@ public class ConnectionHandler extends RecursiveAction {
                 byte[] arr = baos.toByteArray();
                 ByteBuffer buf = ByteBuffer.wrap(arr);
                 channel.send(buf, con.sa);
+                AppServer.LOGGER.info("Sending a response...");
 
                 oos.close();
             }catch (IOException e) {
                 Outputer.printerror ("An error occurred while sending data to the client!");
                 AppServer.LOGGER.severe("An error occurred while sending data to the client!");
             }
-        });
+        };
+        Thread thread1 = new Thread(thread);
+        thread1.start();
+
+//            sendCachedThreadPool.submit(() -> {
+//            try{
+//                System.out.println("hi from write");
+//
+//                ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
+//                ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(baos));
+//                oos.writeObject(con.response);
+//                oos.flush();
+//
+//                byte[] arr = baos.toByteArray();
+//                ByteBuffer buf = ByteBuffer.wrap(arr);
+//
+//                channel.send(buf, con.sa);
+//
+//                System.out.println("sent already");
+//
+//                oos.close();
+//            } catch (IOException e) {
+//                Outputer.printerror ("An error occurred while sending data to the client!");
+//                AppServer.LOGGER.severe("An error occurred while sending data to the client!");
+//            } catch (Exception e) {
+//                System.out.println(e);
+//            }
+//        });
+//        thread.start();
     }
 
     static class Con {

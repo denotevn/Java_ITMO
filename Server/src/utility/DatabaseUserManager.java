@@ -107,6 +107,7 @@ public class DatabaseUserManager {
             } else userId = -1;
             return userId;
         } catch (SQLException exception) {
+            System.out.println(exception);
             AppServer.LOGGER.severe("An error occurred while executing the SELECT_USER_BY_USERNAME query!!");
             throw new DatabaseHandlingException();
         } finally {
@@ -137,5 +138,4 @@ public class DatabaseUserManager {
             databaseHandler.closePreparedStatement(preparedStatementInsertUserStatement);
         }
     }
-
 }

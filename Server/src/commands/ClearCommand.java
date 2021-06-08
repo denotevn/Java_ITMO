@@ -2,6 +2,8 @@ package commands;
 
 import data.SpaceMarine;
 import exception.DatabaseHandlingException;
+import exception.ManualDatabaseEditException;
+import exception.PermissionDeniedException;
 import exception.WrongAmountOfElementException;
 import interaction.User;
 import utility.CollectionManager;
@@ -23,18 +25,26 @@ public class ClearCommand extends AbstractCommand {
     @Override
     public boolean executed(String argument, Object commandObjectArgument, User user) {
         try{
-            if (!argument.isEmpty()) throw new WrongAmountOfElementException();
-            for (SpaceMarine marine : collectionManager.getListMarine()){
-
+            if (!argument.isEmpty() || commandObjectArgument != null) throw new WrongAmountOfElementException();
+            for (SpaceMarine marine : collectionManager.getCollection()){
+                if (!marine.getOwner().equals(user)) throw new PermissionDeniedException();
+                if (!databaseCollectionManager.checkMarineUserId(marine.getId(), user))
+                    throw new ManualDatabaseEditException();
             }
             databaseCollectionManager.clearCollection();
-            collectionManager.clear();
-            ResponseOutputer.appendln("Collection is clear !");
+            collectionManager.getCollection().clear();
+            ResponseOutputer.appendln("Cleared successfully!");
             return true;
         } catch (DatabaseHandlingException e) {
             ResponseOutputer.appenderror ("An error occurred while accessing the database!");
         } catch (WrongAmountOfElementException exception) {
             ResponseOutputer.appendln("Using: '" + getName() + " " + getUsage() + "'");
+        } catch (ManualDatabaseEditException e) {
+            ResponseOutputer.appenderror("There was a direct change in the basics of the data!");
+            ResponseOutputer.appendln("Restart the client for possible errors.");
+        } catch (PermissionDeniedException e) {
+            ResponseOutputer.appenderror ("Insufficient rights to execute this command!");
+            ResponseOutputer.appendln ("Objects owned by other users are read-only.");;
         }
         return false;
     }

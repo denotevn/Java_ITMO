@@ -13,8 +13,8 @@ public class AppServer {
     public static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     private static String databaseHost;
-    private static String databaseUrl = "jdbc:postgresql://localhost:5678/studs";
-    private static String databaseUserName = "s291184";
+    private static String databaseUrl = "jdbc:postgresql://localhost:5432/studs";
+    private static String databaseUserName = "postgres";
     private static String databasePassword = "123456789";
 
     private static int port = 6789;
@@ -72,15 +72,15 @@ public class AppServer {
                     .getLocation()
                     .getPath())
                     .getName();
-            Outputer.println("Использование: 'java -jar " + jarName + " <port> <db_host> <db_password>'");
+            Outputer.println("Using: 'java -jar " + jarName + " <port> <db_host> <db_password>'");
         } catch (NumberFormatException exception) {
-            Outputer.printerror("Порт должен быть представлен числом!");
-            AppServer.LOGGER.severe("Порт должен быть представлен числом!");
+            Outputer.printerror("The port must be represented by a number!");
+            AppServer.LOGGER.severe("The port must be represented by a number!");
         } catch (NotInDeclaredLimitsException exception) {
-            Outputer.printerror("Порт не может быть отрицательным!");
-            AppServer.LOGGER.severe("Порт не может быть отрицательным!");
+            Outputer.printerror("The port cannot be negative!");
+            AppServer.LOGGER.severe("The port cannot be negative!");
         }
-        AppServer.LOGGER.severe("Ошибка инициализации порта запуска!");
+        AppServer.LOGGER.severe("Startup port initialization error!");
         return false;
     }
 }

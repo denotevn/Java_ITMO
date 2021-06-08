@@ -72,14 +72,14 @@ public class AuthAsker {
      * @return Answer (true/false).
      */
     public boolean askQuestion(String question) {
-        String finalQuestion = question + " (+/-):";
+        String finalQuestion = question + " (yes/no):";
         String answer;
         while (true) {
             try {
                 Outputer.println(finalQuestion);
                 Outputer.print(ApplicationClient.PS2);
                 answer = reader.readLine().trim();
-                if (!answer.equals("+") && !answer.equals("-")) throw new NotInDeclaredLimitsException();
+                if (!answer.equals("yes") && !answer.equals("no")) throw new NotInDeclaredLimitsException();
                 break;
             } catch (NoSuchElementException exception) {
                 Outputer.printerror("The answer is not recognized!");
@@ -90,7 +90,7 @@ public class AuthAsker {
                 System.exit(0);
             }
         }
-        return answer.equals("+");
+        return answer.equals("yes");
     }
 
 }

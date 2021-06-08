@@ -1,16 +1,15 @@
 package commands;
 
-import data.SpaceMarine;
 import exception.DatabaseHandlingException;
 import exception.WrongAmountOfElementException;
 import interaction.MarineRaw;
 import interaction.User;
+import server.AppServer;
 import utility.*;
 
-import java.io.IOException;
+
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.LocalDateTime;
+
 
 public class AddCommand extends AbstractCommand {
     private CollectionManager collectionManager;
@@ -36,28 +35,19 @@ public class AddCommand extends AbstractCommand {
         try{
             if (!stringArgument.isEmpty() || objectArgument == null) throw new WrongAmountOfElementException();
             MarineRaw marineRaw = (MarineRaw) objectArgument;
-            collectionManager.add(databaseCollectionManager.insertMarine(marineRaw,user));
-//            collectionManager.add(new SpaceMarine(
-//                    collectionManager.generateNextId(),
-//                    marineRaw.getName(),
-//                    marineRaw.getCoordinates(),
-//                    java.util.Date.from(Instant.now()),
-//                    marineRaw.getHealth(),
-//                    marineRaw.getCategory(),
-//                    marineRaw.getWeaponType(),
-//                    marineRaw.getMeleeWeapon(),
-//                    marineRaw.getChapter()
-//            ));
-            ResponseOutputer.appendln("Success add marine !");
+//            System.out.println("IM here in addCommand");
+//            collectionManager.getListMarine().add(databaseCollectionManager.insertMarine(marineRaw,user));
+            collectionManager.addToCollection(databaseCollectionManager.insertMarine(marineRaw,user));
+
+            ResponseOutputer.appendln("Marine added successfully !");
             return true;
         } catch (WrongAmountOfElementException e) {
-            e.printStackTrace();
+            ResponseOutputer.appenderror("Using: '" + getName() + "'");
             ResponseOutputer.appenderror("The command entered is incorrect, " +
                     "please press help for more details");
-        } catch (SQLException exception) {
-            exception.printStackTrace();
         } catch (DatabaseHandlingException e) {
-            ResponseOutputer.appenderror ("An error occurred while accessing the database!");
+            ResponseOutputer.appenderror ("An error occurred while accessing the database in add command !");
+            AppServer.LOGGER.severe("problem in class AddCommand !");
         }
         return false;
     }

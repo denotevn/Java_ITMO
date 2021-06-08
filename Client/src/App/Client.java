@@ -38,33 +38,43 @@ public class Client {
         this.userHandler = userHandler;
         this.authHandler = authHandler;
     }
-    public void run() throws IOException {
-        while (true){
-            try{
-                connectToServer();
-                processUserAuthentication();
-                processRequestToServer(clientChannel,addr);
-                break;
-            } catch (ConnectionErrorException e) {
-                if (reconnectionAttempts >= maxReconnectionAttempts) {
-                    Outputer.printerror("Connection attempts exceeded!");
-                    break;
-                }
+    public void run() {
+        try {
+            while (true) {
                 try {
-                    Thread.sleep(reconnectionTimeOut);
-                } catch (IllegalArgumentException timeoutException) {
-                    Outputer.printerror("Connection timeout '" + reconnectionTimeOut +
-                            "' is out of range!");
-                    Outputer.println("Reconnection will be done immediately.");
-                } catch (Exception timeoutException) {
-                    Outputer.printerror("An error occurred while trying to wait for a connection!");
-                    Outputer.println("Reconnection will be done immediately.");
+                    connectToServer();
+                    processUserAuthentication();
+                    processRequestToServer(clientChannel, addr);
+                    break;
+                } catch (ConnectionErrorException exception) {
+                    if (reconnectionAttempts >= maxReconnectionAttempts) {
+                        Outputer.printerror("Connection attempts exceeded!");
+                        break;
+                    }
+                    try {
+                        Thread.sleep(reconnectionTimeOut);
+                    } catch (IllegalArgumentException timeoutException) {
+                        Outputer.printerror("Connection timeout '" + reconnectionTimeOut +
+                                "' is out of range!");
+                        Outputer.println("Reconnection will be done immediately.");
+                    } catch (Exception timeoutException) {
+                        Outputer.printerror("An error occurred while trying to wait for a connection!");
+                        Outputer.println("Reconnection will be done immediately.");
+                    }
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
                 }
+                reconnectionAttempts++;
             }
-            reconnectionAttempts++;
+
+            if (clientChannel!= null) clientChannel.close();
+            Outputer.println("Client shutdown!");
+
+//        } catch (NotInDeclaredLimitsException exception) {
+//            Outputer.printerror("The client can't be started!");
+        } catch (IOException exception) {
+            Outputer.printerror("An error occurred while trying to end the connection to the server!");
         }
-        if (clientChannel !=null) clientChannel.close();
-        Outputer.println("Client shutdown");
     }
     private void connectToServer() throws ConnectionErrorException {
         try {
@@ -81,7 +91,7 @@ public class Client {
         }
     }
 
-    public void checkAddress() throws ConnectionErrorException, NotInDeclaredLimitsException {
+    private void checkAddress() throws ConnectionErrorException, NotInDeclaredLimitsException {
         try{
             if (port != 6789) throw new ConnectionErrorException();
             byte[] ipAddr = new byte[]{127,0,0,1};
@@ -100,7 +110,7 @@ public class Client {
     /**
      * Handle process authentication.
      */
-    public void processUserAuthentication() throws ConnectionErrorException {
+    public void processUserAuthentication() throws ConnectionErrorException, ClassNotFoundException {
         Con con = new Con();
         do {
             try {
@@ -109,13 +119,11 @@ public class Client {
                 if (con.request.isEmpty()) continue;
 
                 send(clientChannel, con, addr);
-                receive(clientChannel, con);
+                receive(clientChannel,con);
 
                 Outputer.print(con.response.getResponseBody());
             } catch (InvalidClassException | NotSerializableException exception) {
                 Outputer.printerror("An error occurred while sending data to the server!");
-            } catch (ClassNotFoundException exception) {
-                Outputer.printerror("An error occurred while reading the received data!");
             } catch (IOException exception) {
                 Outputer.printerror("The connection to the server has been dropped!");
                 reconnectionAttempts++;
@@ -154,39 +162,40 @@ public class Client {
 
     private void send(DatagramChannel clientChanel,Con con,SocketAddress addr) throws IOException{
 
-            // thuc hien 1 luon dau ra trong do du lieu duoc ghi vao 1 mang byte
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
-            ObjectOutputStream oss = new ObjectOutputStream(new BufferedOutputStream(baos));
+        // thuc hien 1 luon dau ra trong do du lieu duoc ghi vao 1 mang byte
 
-            oss.writeObject(con.request);
-            oss.flush();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
+        ObjectOutputStream oss = new ObjectOutputStream(new BufferedOutputStream(baos));
 
+        oss.writeObject(con.request);
+        oss.flush();
 
-            //Tao mot mang moi duoc cap phat
-            byte[] arr = baos.toByteArray();
-            // goi mot mang byte vao bo dem de gui, luu mang byte vao  arr[]
-            ByteBuffer buf = ByteBuffer.wrap(arr);
-            //Sends a datagram via this channel.
-            clientChanel.send(buf,addr);
-            oss.close();
+        //Tao mot mang moi duoc cap phat
+        byte[] arr = baos.toByteArray();
+        // goi mot mang byte vao bo dem de gui, luu mang byte vao  arr[]
+        ByteBuffer buf = ByteBuffer.wrap(arr);
+        //Sends a datagram via this channel.
+        clientChanel.send(buf,addr);
+
+        oss.close();
     }
 
     private void receive(DatagramChannel clientChanel, Con con) throws ClassNotFoundException, IOException {
+        /**phan bo bo dem file moi*/
+        ByteBuffer buf = ByteBuffer.allocate(32768);
+        /*** goi phuong thuc nay truoc khi su dung mot chuoi cac thao tac doc hoac lap day vung dem nay*/
+        buf.clear();
+        /**Nhan mot datagram thong qua kenh nay*/
+        clientChanel.receive(buf);
 
-            /**phan bo bo dem file moi*/
-            ByteBuffer buf = ByteBuffer.allocate(32768);
-            /*** goi phuong thuc nay truoc khi su dung mot chuoi cac thao tac doc hoac lap day vung dem nay*/
-            buf.clear();
-            /**Nhan mot datagram thong qua kenh nay*/
-            clientChanel.receive(buf);
+        byte[] array= buf.array();
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(array);
+        ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(byteArrayInputStream));
+        /**readObject - doc 1 doi tuong tu ObjectInputStream*/
+        con.response = (Response) ois.readObject();
 
-            byte[] array= buf.array();
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(array);
-            ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(byteArrayInputStream));
-            /**readObject - doc 1 doi tuong tu ObjectInputStream*/
-            con.response = (Response) ois.readObject();
-            ois.close();
+        ois.close();
     }
 
     static class Con {

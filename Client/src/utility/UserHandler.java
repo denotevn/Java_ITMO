@@ -35,7 +35,7 @@ public class UserHandler {
     public Request handler(ResponseCode serverResponeCode, User user)
     {
         String userInput = null;
-        String [] userCommand = new String[2];
+        String [] userCommand ;
         ProcessingCode processingCode;
         int rewriteAttempts = 0;
         try{
@@ -52,6 +52,7 @@ public class UserHandler {
 
                     if (isScriptMode()) {
                         Outputer.println(App.ApplicationClient.PS1 + userInput);
+                        //interactive mode
                     }else {
                         Outputer.println("\nEnter the command:");
                         Outputer.print(ApplicationClient.PS1);
@@ -74,7 +75,7 @@ public class UserHandler {
                 }
                 processingCode = processCommand(userCommand[0],userCommand[1]);
             }while(processingCode == ProcessingCode.ERROR && !isScriptMode() || userCommand[0].isEmpty());
-
+/**DA SUA O DAY ! userCommand[0].isEmpty()*/
             try{
                 if (isScriptMode() && ( processingCode == ProcessingCode.ERROR))
                     throw new IncorrectInputInScriptException();
@@ -98,7 +99,8 @@ public class UserHandler {
                         break;
                 }
             } catch (ScriptRecursionException e) {
-                Outputer.printerror("Scripts cannot be called recursively.");
+                Outputer.printerror("Scripts can't be called recursively! ");
+                throw new IncorrectInputInScriptException();
             } catch (FileNotFoundException e) {
                 Outputer.printerror("File not found.");
             } catch (IOException e) {
@@ -209,12 +211,11 @@ public class UserHandler {
      * @return Marine to update.
      * @throws IncorrectInputInScriptException When something went wrong in script.
      */
-    private MarineRaw generateMarineUpdate()throws IncorrectInputInScriptException {
+    private MarineRaw generateMarineUpdate() throws IncorrectInputInScriptException, IOException {
         MarineAsk marineAsk = new MarineAsk(userReader);
-        MarineRaw marine = null;
-        try {
+        if (isScriptMode()) marineAsk.setFileMode();
             String name = marineAsk.askQuestions("Want to change the name of a soldier?") ?
-                    marineAsk.nameAsker() : null;
+                        marineAsk.nameAsker() : null;
             Coordinates coordinates = marineAsk.askQuestions("Want to change the coordinates of a soldier? ") ?
                     marineAsk.coordinatesAsker() : null;
             long health = marineAsk.askQuestions("Want to change the health of a soldier?") ?
@@ -227,12 +228,12 @@ public class UserHandler {
                     marineAsk.meleeWeaponAsker() : null;
             Chapter chapter = marineAsk.askQuestions("want to change the the Chapter of a Soldier?") ?
                     marineAsk.askChapter() : null;
-            marine = new MarineRaw(name, coordinates, health, category, weapon, meleeWeapon, chapter);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return marine;
+            return new MarineRaw(name,
+                    coordinates,
+                    health,
+                    category,
+                    weapon,
+                    meleeWeapon,
+                    chapter);
     }
-
-
 }

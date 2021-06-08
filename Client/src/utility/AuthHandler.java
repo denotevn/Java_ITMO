@@ -19,7 +19,7 @@ public class AuthHandler {
         String loginCommand = "login";
 
         String command = authAsker.askQuestion("Have an account already?")?loginCommand : registerCommand;
-        User user = new User(authAsker.askUsername(),authAsker.askPassword());
-        return new Request(command,"",user);
+        User user = new User(authAsker.askUsername(), authAsker.askPassword());
+        return new Request(command,"", user);
     }
 }

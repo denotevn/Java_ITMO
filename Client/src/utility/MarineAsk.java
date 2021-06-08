@@ -13,7 +13,7 @@ import java.util.Random;
 public class MarineAsk {
     private final long MIN_ID = 0;
     private final long MIN_HEALTH = 0;
-    private final double MAX_Y = 587;
+    private final int MAX_Y = 4000;
 
     private BufferedReader userReader;
     private boolean fileMode;
@@ -71,14 +71,14 @@ public class MarineAsk {
     }
     /**insert  coordinate y
      @return double x*/
-    public double askY() throws IOException {
+    public int askY() throws IOException {
         String strY;
-        double y;
+        int y;
         while(true){
             Outputer.println("Enter the value of y: ");
             strY = bfr.readLine().trim();
-            if (inputChek.DoubleInvalidCheck(strY,Double.MIN_VALUE,MAX_Y) == false) throw new NumberFormatException();
-            y = Double.parseDouble(strY);
+            if (inputChek.IntegerValidCheck(strY,Integer.MIN_VALUE,MAX_Y) == false) throw new NumberFormatException();
+            y = Integer.parseInt(strY);
             break;
         }
         return y;
@@ -88,7 +88,7 @@ public class MarineAsk {
     /**@return Marine's coordinate*/
     public Coordinates coordinatesAsker() throws IOException {
         int x;
-        Double y;
+        int y;
         x = askX();
         y = askY();
         return new Coordinates(x,y);
@@ -119,15 +119,21 @@ public class MarineAsk {
     public String nameAsker() throws IOException {
         String name;
         while (true){
-            System.out.println("Insert name Chapter or name of People: ");
-            name = bfr.readLine();
-            if(name.equalsIgnoreCase(null)||name.equalsIgnoreCase(""))
-            {
-                System.out.println("Field cannot be null, String cannot be empty");
-                System.out.println("Insert name: ");
-                continue;
-            }else
-                break;
+            try{
+                System.out.println("Insert name chapter or name Marine: ");
+                Outputer.println(ApplicationClient.PS2);
+                name = bfr.readLine().trim();
+                if(name.equalsIgnoreCase(null)||name.equalsIgnoreCase(""))
+                {
+                    System.out.println("Field cannot be null, String cannot be empty");
+                    System.out.println("Insert name chapter or name marine: ");
+                    continue;
+                }else
+                    break;
+            } catch (IOException exception) {
+                exception.printStackTrace();
+            }
+
         }
         return name;
     }
@@ -199,7 +205,7 @@ public class MarineAsk {
     public Chapter askChapter() throws  IOException {
         String name;
         name = nameAsker();
-        String parentLegion = bfr.readLine().trim();
+        String parentLegion = legionAsker();
         return new Chapter(name, parentLegion);
     }
 

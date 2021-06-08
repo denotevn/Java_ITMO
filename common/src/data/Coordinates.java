@@ -1,12 +1,13 @@
 package data;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Coordinates implements Serializable {
     private int x;
-    private Double y;
+    private int y;
 
-    public Coordinates (int x, Double y) {
+    public Coordinates (int x, int y) {
         this.x = x;
         this.y = y;
     }
@@ -15,7 +16,7 @@ public class Coordinates implements Serializable {
         return x;
     }
 
-    public double getY() {
+    public int getY() {
         return y;
     }
 
@@ -25,5 +26,18 @@ public class Coordinates implements Serializable {
                 "x=" + x +
                 ", y=" + y +
                 '}';
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Coordinates that = (Coordinates) o;
+        return y == that.y &&
+                Objects.equals(x, that.x);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
     }
 }

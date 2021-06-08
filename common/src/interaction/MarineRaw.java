@@ -7,16 +7,18 @@ import java.io.Serializable;
  * Class for get Marines value.
  */
 public class MarineRaw implements Serializable {
-    private String name;
-    private Coordinates coordinates;
-    private java.util.Date date;
-    private long health;
-    private AstartesCategory category;
-    private Weapon weaponType;
-    private MeleeWeapon meleeWeapon;
-    private Chapter chapter;
+    private long id; //Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
+    private String name; //Поле не может быть null, Строка не может быть пустой
+    private Coordinates coordinates; //Поле не может быть null
+    private java.util.Date creationDate; //Поле не может быть null, Значение этого поля должно генерироваться автоматически
+    private long health; //Значение поля должно быть больше 0
+    private AstartesCategory category; //Поле не может быть null
+    private Weapon weaponType; //Поле не может быть null
+    private MeleeWeapon meleeWeapon; //Поле не может быть null
+    private Chapter chapter; //Поле может быть null
 
-    public MarineRaw(String name, Coordinates coordinates, long health, AstartesCategory category, Weapon weaponType,
+    public MarineRaw(String name, Coordinates coordinates, long health,
+                     AstartesCategory category, Weapon weaponType,
                      MeleeWeapon meleeWeapon, Chapter chapter) {
         this.name = name;
         this.coordinates = coordinates;
@@ -25,6 +27,12 @@ public class MarineRaw implements Serializable {
         this.weaponType = weaponType;
         this.meleeWeapon = meleeWeapon;
         this.chapter = chapter;
+    }
+    /**
+     * @return Id of Marine
+     * */
+    public Long getId(){
+        return id;
     }
     /**
      * @return Name of the marine.

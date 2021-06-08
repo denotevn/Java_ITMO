@@ -49,8 +49,6 @@ public class AddIfMinCommand extends AbstractCommand {
             ResponseOutputer.appendln("Using: '" + getName() + " " + getUsage() + "'");
         }catch (ClassCastException e){
             ResponseOutputer.appenderror("The object submitted by the client is invalid");
-        } catch (SQLException exception) {
-            exception.printStackTrace();
         } catch (DatabaseHandlingException e) {
             ResponseOutputer.appenderror ("An error occurred while accessing the database!");
         }
